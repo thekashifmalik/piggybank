@@ -8,6 +8,7 @@ celery==3.0.13
 django-celery==3.0.11
 django-extensions==1.0.2
 django-pylibmc-sasl==0.2.4
+flower==0.4.2
 gunicorn==0.17.2
 kombu==2.5.4
 psycopg2==2.4.6
@@ -15,4 +16,5 @@ pylibmc==1.2.3
 python-dateutil==1.5
 pytz==2012j
 selenium==2.29.0
+tornado==2.4.1
 wsgiref==0.1.2

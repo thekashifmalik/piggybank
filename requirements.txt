@@ -1,5 +1,14 @@
 Django==1.4.3
 South==0.7.6
+amqp==1.0.6
+anyjson==0.3.3
+billiard==2.7.3.19
+celery==3.0.13
+django-celery==3.0.11
 django-extensions==1.0.2
+gunicorn==0.17.2
+kombu==2.5.4
+python-dateutil==1.5
+pytz==2012j
 selenium==2.29.0
 wsgiref==0.1.2

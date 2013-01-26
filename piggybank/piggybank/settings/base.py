@@ -92,6 +92,7 @@ INSTALLED_APPS = (
   # 'compressor',
 
   # Project
+  'fetcher',
 )
 
 # Set up simple master logger

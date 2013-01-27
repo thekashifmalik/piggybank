@@ -1,8 +1,10 @@
 Django==1.4.3
+Fabric==1.5.2
 South==0.7.6
 Unipath==0.2.1
 amqp==1.0.6
 anyjson==0.3.3
+argparse==1.2.1
 billiard==2.7.3.19
 celery==3.0.13
 django-celery==3.0.11
@@ -11,7 +13,10 @@ django-pylibmc-sasl==0.2.4
 flower==0.4.2
 gunicorn==0.17.2
 kombu==2.5.4
+paramiko==1.9.0
 psycopg2==2.4.6
+pycrypto==2.6
+pygraphviz==1.1
 pylibmc==1.2.3
 python-dateutil==1.5
 pytz==2012j

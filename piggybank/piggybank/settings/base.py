@@ -93,6 +93,7 @@ INSTALLED_APPS = (
 
   # Project
   'fetcher',
+  'stocks',
 )
 
 # Set up simple master logger

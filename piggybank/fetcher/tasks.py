@@ -4,11 +4,11 @@ import time
 from celery import task
 from .models import Fetch, FetchType, FetchResult
 from stocks.models import Stock
+from django.conf import settings
 from django.core.cache import cache
 from celery.utils.log import get_task_logger
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-
 
 logger = get_task_logger(__name__)
 
@@ -21,9 +21,9 @@ def run_screen(fetch_type_id):
 	browser = webdriver.Firefox()
 	browser.get("https://login.fidelity.com/ftgw/Fas/Fidelity/RtlCust/Login/Init?AuthRedUrl=https://oltx.fidelity.com/ftgw/fbc/ofsummary/defaultPage")
 	elem = browser.find_element_by_id("ssnt")
-	elem.send_keys(os.environ['FUN'])
+	elem.send_keys(settings.FIDELITY_USERNAME)
 	elem = browser.find_element_by_id("PIN")
-	elem.send_keys(os.environ['FPW'] + Keys.RETURN)
+	elem.send_keys(settings.FIDELITY_PASSWORD + Keys.RETURN)
 	browser.get("https://research2.fidelity.com/fidelity/screeners/commonstock/main.asp")
 
 
@@ -36,8 +36,8 @@ def run_screen(fetch_type_id):
 	helpers.find_element_by_xpath_and_wait(browser, "//input[@id='radio-Traders']").click()
 	# click ok to download
 	browser.find_element_by_xpath("//div[@class='popup-contents']//a[@title='Ok']").click()
-	# wait for the download
-	time.sleep(2)
+	# wait for the download - TODO - MAKE SMARTER
+	time.sleep(5)
 	tickers = helpers.process_result()
 	browser.quit()
 

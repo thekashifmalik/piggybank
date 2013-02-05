@@ -18,7 +18,7 @@ logger = get_task_logger(__name__)
 def run_screen(fetch_type_id):
 	fetch_type = FetchType.objects.get(id=fetch_type_id)
 	fetch = Fetch.objects.create(type=fetch_type)
-	browser = webdriver.Firefox()
+	browser = webdriver.Chrome()
 	browser.get("https://login.fidelity.com/ftgw/Fas/Fidelity/RtlCust/Login/Init?AuthRedUrl=https://oltx.fidelity.com/ftgw/fbc/ofsummary/defaultPage")
 	elem = browser.find_element_by_id("ssnt")
 	elem.send_keys(settings.FIDELITY_USERNAME)

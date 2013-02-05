@@ -3,3 +3,5 @@
 *.pyc
 .ropeproject
 local.py
+celerybeat-schedule
+celerybeat.pid

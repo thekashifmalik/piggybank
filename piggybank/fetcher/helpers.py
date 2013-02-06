@@ -10,12 +10,12 @@ logger = get_task_logger(__name__)
 
 def populate_filters_reuters_ford(browser):
   logger.info("Populating folters for reuters and ford")
-  populate_criteria(browser, 'Thomson Reuters')
+  populate_criteria(browser, 0, 'Thomson Reuters')
   populate_value(browser, 0, 0, 'Is')
   populate_value(browser, 0, 1, 'Buy')
   while len(find_elements_by_xpath_and_wait(browser, "//table[@class='table-screener-criteria']//tr")) < 2:
     logger.log("Waiting for criteria row 2")
-  populate_criteria(browser, 'Ford')
+  populate_criteria(browser, 1, 'Ford')
   populate_value(browser, 1, 0, 'Is')
   populate_value(browser, 1, 1, 'Strong Buy')
   # time.sleep(1)
@@ -25,17 +25,18 @@ def populate_filters_reuters_ford(browser):
   # populate_value(browser, 2, 1, '2', 1)
 
 # index is the index of the results dropdown that should be selected after it types in the criteria
-def populate_criteria(browser, criteria, index=0):
+def populate_criteria(browser, row, criteria, index=0):
   logger.info("Populating criteria " + criteria)
+  elem = find_element_by_xpath_and_wait(browser, "//div[@class='inline-block div-criteria-lookup']//input")
+
   browser.execute_script("$('.div-criteria-lookup:last input').val('')")
-  elem = find_elements_by_css_selector_and_wait(browser, '.div-criteria-lookup input')[-1]
   elem.send_keys(criteria)
   while len(find_elements_by_css_selector_and_wait(browser, '.result-list a')) < index:
     logger.log("Waiting for results dropdown")
   elem = find_elements_by_css_selector_and_wait(browser, '.result-list a')[index]
   elem.click()
   # wait for the first value box to appear
-  while len(browser.find_elements_by_css_selector('.span-no-value')) != 0:
+  while len(browser.find_elements_by_css_selector('.dd-disabled')) != 0:
     logger.info("Waiting for value box")
 
 # row and col are 0 based

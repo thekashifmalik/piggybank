@@ -2,12 +2,19 @@ import time
 import os
 import csv
 from selenium.webdriver.support.wait import WebDriverWait
+from celery.utils.log import get_task_logger
+import pdb
+
+logger = get_task_logger(__name__)
+
 
 def populate_filters_reuters_ford(browser):
+  logger.info("Populating folters for reuters and ford")
   populate_criteria(browser, 'Thomson Reuters')
   populate_value(browser, 0, 0, 'Is')
   populate_value(browser, 0, 1, 'Buy')
-  time.sleep(1)
+  while len(find_elements_by_xpath_and_wait(browser, "//table[@class='table-screener-criteria']//tr")) < 2:
+    logger.log("Waiting for criteria row 2")
   populate_criteria(browser, 'Ford')
   populate_value(browser, 1, 0, 'Is')
   populate_value(browser, 1, 1, 'Strong Buy')
@@ -17,21 +24,25 @@ def populate_filters_reuters_ford(browser):
   # populate_value(browser, 2, 1, '1', 0)
   # populate_value(browser, 2, 1, '2', 1)
 
-# index is the index of the typeahead dropdown that should be selected after it types in the criteria
+# index is the index of the results dropdown that should be selected after it types in the criteria
 def populate_criteria(browser, criteria, index=0):
-  print "Populating criteria " + criteria
+  logger.info("Populating criteria " + criteria)
   browser.execute_script("$('.div-criteria-lookup:last input').val('')")
-  elem = browser.find_elements_by_css_selector('.div-criteria-lookup input')[-1]
+  elem = find_elements_by_css_selector_and_wait(browser, '.div-criteria-lookup input')[-1]
   elem.send_keys(criteria)
-  elem = browser.find_elements_by_css_selector('.result-list a')[index]
+  while len(find_elements_by_css_selector_and_wait(browser, '.result-list a')) < index:
+    logger.log("Waiting for results dropdown")
+  elem = find_elements_by_css_selector_and_wait(browser, '.result-list a')[index]
   elem.click()
-  time.sleep(1)
+  # wait for the first value box to appear
+  while len(browser.find_elements_by_css_selector('.span-no-value')) != 0:
+    logger.info("Waiting for value box")
 
 # row and col are 0 based
 # some values (like dividend range) have 2 text inputs that are children of the same secondary-control div
 # sub_col indicates which input within the secondary-control div to populate. It is also 0 based
 def populate_value(browser, row, col, val, sub_col=0):
-  elem = browser.find_element_by_xpath("//table[@class='table-screener-criteria']//tr[" + str((row + 1)) + "]//div[contains(concat(' ',@class,' '),' secondary-control ')][" + str(col + 1) + "]")
+  elem = find_element_by_xpath_and_wait(browser, "//table[@class='table-screener-criteria']//tr[" + str((row + 1)) + "]//div[contains(concat(' ',@class,' '),' secondary-control ')][" + str(col + 1) + "]")
   children = elem.find_elements_by_xpath("div")
   klass = children[sub_col].get_attribute("class")
   if klass == 'expander':
@@ -40,7 +51,7 @@ def populate_value(browser, row, col, val, sub_col=0):
     choice = find_element_by_xpath_and_wait(elem, "./div[@class='popup']//ul[@class='option-list']//a[text()='" + val + "']")
     choice.click()
   elif klass.find('numeric-input') != -1:
-    text_box = children[sub_col].find_element_by_xpath(".//input")
+    text_box = find_element_by_xpath_and_wait(children[sub_col], ".//input")
     text_box.send_keys(val)
 
 
@@ -64,14 +75,32 @@ def process_result():
   del tickers[0]
   return tickers
 
+def find_element_by_id_and_wait(driver, id):
+  WebDriverWait(driver, 90).until(
+            lambda driver : driver.find_element_by_id(id)
+    )
+  return driver.find_element_by_id(id)
+
 def find_element_by_xpath_and_wait(driver, xpath):
-  WebDriverWait(driver, 10).until(
+  WebDriverWait(driver, 90).until(
             lambda driver : driver.find_element_by_xpath(xpath)
     )
   return driver.find_element_by_xpath(xpath)
 
 def find_elements_by_xpath_and_wait(driver, xpath):
-  WebDriverWait(driver, 10).until(
+  WebDriverWait(driver, 90).until(
             lambda driver : driver.find_elements_by_xpath(xpath)
     )
   return driver.find_elements_by_xpath(xpath)
+
+def find_elements_by_css_selector_and_wait(driver, css_selector):
+  WebDriverWait(driver, 90).until(
+            lambda driver : driver.find_elements_by_css_selector(css_selector)
+    )
+  return driver.find_elements_by_css_selector(css_selector)
+
+def find_element_by_css_selector_and_wait(driver, css_selector):
+  WebDriverWait(driver, 90).until(
+            lambda driver : driver.find_element_by_css_selector(css_selector)
+    )
+  return driver.find_element_by_css_selector(css_selector)

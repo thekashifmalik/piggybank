@@ -17,15 +17,26 @@ logger = get_task_logger(__name__)
 @task
 def run_screen(fetch_type_id):
 	fetch_type = FetchType.objects.get(id=fetch_type_id)
+	logger.info("Starting screen for " + str(fetch_type))
 	fetch = Fetch.objects.create(type=fetch_type)
-	browser = webdriver.Chrome()
-	browser.get("https://login.fidelity.com/ftgw/Fas/Fidelity/RtlCust/Login/Init?AuthRedUrl=https://oltx.fidelity.com/ftgw/fbc/ofsummary/defaultPage")
-	elem = browser.find_element_by_id("ssnt")
-	elem.send_keys(settings.FIDELITY_USERNAME)
-	elem = browser.find_element_by_id("PIN")
-	elem.send_keys(settings.FIDELITY_PASSWORD + Keys.RETURN)
-	browser.get("https://research2.fidelity.com/fidelity/screeners/commonstock/main.asp")
 
+	fp = webdriver.FirefoxProfile()
+	fp.set_preference("browser.download.folderList",2)
+	fp.set_preference("browser.download.manager.showWhenStarting",False)
+	fp.set_preference("browser.download.dir", os.getcwd())
+	fp.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/octet-stream")
+
+	browser = webdriver.Firefox(firefox_profile=fp)
+
+	browser.get("https://login.fidelity.com/ftgw/Fas/Fidelity/RtlCust/Login/Init?AuthRedUrl=https://oltx.fidelity.com/ftgw/fbc/ofsummary/defaultPage")
+	logger.info("Waiting for login")
+	elem = helpers.find_element_by_id_and_wait(browser, "ssnt")
+	elem.send_keys(settings.FIDELITY_USERNAME)
+	elem = helpers.find_element_by_id_and_wait(browser, "PIN")
+	elem.send_keys(settings.FIDELITY_PASSWORD + Keys.RETURN)
+	logger.info("Logging in")
+	browser.get("https://research2.fidelity.com/fidelity/screeners/commonstock/main.asp")
+	logger.info("Going to screen page")
 
 	helpers.populate_filters_reuters_ford(browser)
 
@@ -35,7 +46,7 @@ def run_screen(fetch_type_id):
 	# click the traders radio button
 	helpers.find_element_by_xpath_and_wait(browser, "//input[@id='radio-Traders']").click()
 	# click ok to download
-	browser.find_element_by_xpath("//div[@class='popup-contents']//a[@title='Ok']").click()
+	helpers.find_element_by_xpath_and_wait(browser, "//div[@class='popup-contents']//a[@title='Ok']").click()
 	# wait for the download - TODO - MAKE SMARTER
 	time.sleep(5)
 	tickers = helpers.process_result()

@@ -8,7 +8,7 @@ import pdb
 logger = get_task_logger(__name__)
 
 
-def populate_filters_reuters_ford(browser):
+def populate_filters_reuters_ford_buy_buy(browser):
   logger.info("Populating filters for reuters and ford")
   populate_criteria(browser, 0, 'Thomson Reuters')
   populate_value(browser, 0, 0, 'Is')
@@ -23,6 +23,28 @@ def populate_filters_reuters_ford(browser):
   # populate_value(browser, 2, 0, 'Is in the range')
   # populate_value(browser, 2, 1, '1', 0)
   # populate_value(browser, 2, 1, '2', 1)
+
+def populate_filters_reuters_ford_sell_sell(browser):
+  logger.info("Populating filters for reuters and ford")
+  populate_criteria(browser, 0, 'Thomson Reuters')
+  populate_value(browser, 0, 0, 'Is')
+  populate_value(browser, 0, 1, 'Sell')
+  while len(find_elements_by_xpath_and_wait(browser, "//table[@class='table-screener-criteria']//tr")) < 2:
+    logger.log("Waiting for criteria row 2")
+  populate_criteria(browser, 1, 'Ford')
+  populate_value(browser, 1, 0, 'Is')
+  populate_value(browser, 1, 1, 'Strong Sell')
+
+def populate_filters_reuters_ford_hold_hold(browser):
+  logger.info("Populating filters for reuters and ford")
+  populate_criteria(browser, 0, 'Thomson Reuters')
+  populate_value(browser, 0, 0, 'Is')
+  populate_value(browser, 0, 1, 'Hold')
+  while len(find_elements_by_xpath_and_wait(browser, "//table[@class='table-screener-criteria']//tr")) < 2:
+    logger.log("Waiting for criteria row 2")
+  populate_criteria(browser, 1, 'Ford')
+  populate_value(browser, 1, 0, 'Is')
+  populate_value(browser, 1, 1, 'Hold')
 
 # index is the index of the results dropdown that should be selected after it types in the criteria
 def populate_criteria(browser, row, criteria, index=0):
@@ -44,6 +66,7 @@ def populate_criteria(browser, row, criteria, index=0):
 # some values (like dividend range) have 2 text inputs that are children of the same secondary-control div
 # sub_col indicates which input within the secondary-control div to populate. It is also 0 based
 def populate_value(browser, row, col, val, sub_col=0):
+  logger.info("Populating criteria " + val)
   elem = find_element_by_xpath_and_wait(browser, "//table[@class='table-screener-criteria']//tr[" + str((row + 1)) + "]//div[contains(concat(' ',@class,' '),' secondary-control ')][" + str(col + 1) + "]")
   children = elem.find_elements_by_xpath("div")
   klass = children[sub_col].get_attribute("class")
@@ -71,6 +94,9 @@ def process_result():
     for f in files:
       if f.find("screen_results") != -1:
         screen = f
+    if screen == None:
+      time.sleep(1)
+      logger.info("Waiting for download")
 
   tickers = []
   with open(screen, 'rb') as csvfile:

@@ -20,25 +20,23 @@ def run_screen(fetch_type_id):
 	logger.info("Starting screen for " + str(fetch_type))
 	fetch = Fetch.objects.create(type=fetch_type)
 
-	fp = webdriver.FirefoxProfile()
-	fp.set_preference("browser.download.folderList",2)
-	fp.set_preference("browser.download.manager.showWhenStarting",False)
-	fp.set_preference("browser.download.dir", os.getcwd())
-	fp.set_preference("browser.helperApps.neverAsk.saveToDisk", "application/octet-stream")
-
-	browser = webdriver.Firefox(firefox_profile=fp)
+	browser = webdriver.Chrome()
 
 	browser.get("https://login.fidelity.com/ftgw/Fas/Fidelity/RtlCust/Login/Init?AuthRedUrl=https://oltx.fidelity.com/ftgw/fbc/ofsummary/defaultPage")
 	logger.info("Waiting for login")
 	elem = helpers.find_element_by_id_and_wait(browser, "ssnt")
 	elem.send_keys(settings.FIDELITY_USERNAME)
 	elem = helpers.find_element_by_id_and_wait(browser, "PIN")
-	elem.send_keys(settings.FIDELITY_PASSWORD + Keys.RETURN)
+	elem.send_keys(settings.FIDELITY_PASSWORD)
+	elem.send_keys(Keys.RETURN)
 	logger.info("Logging in")
+	helpers.find_element_by_id_and_wait(browser, "serviceMessage")
 	browser.get("https://research2.fidelity.com/fidelity/screeners/commonstock/main.asp")
 	logger.info("Going to screen page")
 
 	helpers.populate_filters_reuters_ford(browser)
+
+	helpers.delete_old_results()
 
 	# download csv
 	# click the download button to bring up the popup
@@ -48,7 +46,6 @@ def run_screen(fetch_type_id):
 	# click ok to download
 	helpers.find_element_by_xpath_and_wait(browser, "//div[@class='popup-contents']//a[@title='Ok']").click()
 	# wait for the download - TODO - MAKE SMARTER
-	time.sleep(5)
 	tickers = helpers.process_result()
 	browser.quit()
 

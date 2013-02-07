@@ -9,7 +9,7 @@ logger = get_task_logger(__name__)
 
 
 def populate_filters_reuters_ford(browser):
-  logger.info("Populating folters for reuters and ford")
+  logger.info("Populating filters for reuters and ford")
   populate_criteria(browser, 0, 'Thomson Reuters')
   populate_value(browser, 0, 0, 'Is')
   populate_value(browser, 0, 1, 'Buy')
@@ -38,6 +38,7 @@ def populate_criteria(browser, row, criteria, index=0):
   # wait for the first value box to appear
   while len(browser.find_elements_by_css_selector('.dd-disabled')) != 0:
     logger.info("Waiting for value box")
+    time.sleep(0.2)
 
 # row and col are 0 based
 # some values (like dividend range) have 2 text inputs that are children of the same secondary-control div
@@ -48,24 +49,31 @@ def populate_value(browser, row, col, val, sub_col=0):
   klass = children[sub_col].get_attribute("class")
   if klass == 'expander':
     children[sub_col].click()
-    time.sleep(0.1)
+    time.sleep(0.5)
     choice = find_element_by_xpath_and_wait(elem, "./div[@class='popup']//ul[@class='option-list']//a[text()='" + val + "']")
     choice.click()
   elif klass.find('numeric-input') != -1:
     text_box = find_element_by_xpath_and_wait(children[sub_col], ".//input")
     text_box.send_keys(val)
 
-
-def process_result():
-  # find the most recent download
+def delete_old_results():
   files = [os.path.join(os.environ['HOME'], "Downloads", fname) for fname in os.listdir(os.path.join(os.environ['HOME'], "Downloads"))]
-  screens = []
   for f in files:
     if f.find("screen_results") != -1:
-      screens.append(f)
-  last_screen = max(screens, key=os.path.getmtime)
+      os.remove(f)
+      logger.info("Deleting " + f)
+
+def process_result():
+  screen = None
+  while screen == None:
+    # wait for the download
+    files = [os.path.join(os.environ['HOME'], "Downloads", fname) for fname in os.listdir(os.path.join(os.environ['HOME'], "Downloads"))]
+    for f in files:
+      if f.find("screen_results") != -1:
+        screen = f
+
   tickers = []
-  with open(last_screen, 'rb') as csvfile:
+  with open(screen, 'rb') as csvfile:
     screen_reader = csv.reader(csvfile)
     for row in screen_reader:
       try:

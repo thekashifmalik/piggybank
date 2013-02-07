@@ -14,48 +14,51 @@ logger = get_task_logger(__name__)
 
 
 # Put task here in place of foo.
-@task
+@task(max_retries=5)
 def run_screen(fetch_type_id):
-	fetch_type = FetchType.objects.get(id=fetch_type_id)
-	logger.info("Starting screen for " + str(fetch_type))
-	fetch = Fetch.objects.create(type=fetch_type)
+	try:
+		fetch_type = FetchType.objects.get(id=fetch_type_id)
+		logger.info("Starting screen for " + str(fetch_type))
+		fetch = Fetch.objects.create(type=fetch_type)
 
-	browser = webdriver.Chrome()
+		browser = webdriver.Chrome()
 
-	browser.get("https://login.fidelity.com/ftgw/Fas/Fidelity/RtlCust/Login/Init?AuthRedUrl=https://oltx.fidelity.com/ftgw/fbc/ofsummary/defaultPage")
-	logger.info("Waiting for login")
-	elem = helpers.find_element_by_id_and_wait(browser, "ssnt")
-	elem.send_keys(settings.FIDELITY_USERNAME)
-	elem = helpers.find_element_by_id_and_wait(browser, "PIN")
-	elem.send_keys(settings.FIDELITY_PASSWORD)
-	elem.send_keys(Keys.RETURN)
-	logger.info("Logging in")
-	helpers.find_element_by_id_and_wait(browser, "serviceMessage")
-	browser.get("https://research2.fidelity.com/fidelity/screeners/commonstock/main.asp")
-	logger.info("Going to screen page")
+		browser.get("https://login.fidelity.com/ftgw/Fas/Fidelity/RtlCust/Login/Init?AuthRedUrl=https://oltx.fidelity.com/ftgw/fbc/ofsummary/defaultPage")
+		logger.info("Waiting for login")
+		elem = helpers.find_element_by_id_and_wait(browser, "ssnt")
+		elem.send_keys(settings.FIDELITY_USERNAME)
+		elem = helpers.find_element_by_id_and_wait(browser, "PIN")
+		elem.send_keys(settings.FIDELITY_PASSWORD)
+		elem.send_keys(Keys.RETURN)
+		logger.info("Logging in")
+		helpers.find_element_by_id_and_wait(browser, "serviceMessage")
+		browser.get("https://research2.fidelity.com/fidelity/screeners/commonstock/main.asp")
+		logger.info("Going to screen page")
 
-	helpers.populate_filters_reuters_ford(browser)
+		helpers.populate_filters_reuters_ford(browser)
 
-	helpers.delete_old_results()
+		helpers.delete_old_results()
 
-	# download csv
-	# click the download button to bring up the popup
-	helpers.find_element_by_xpath_and_wait(browser, "//a[text()='Download']").click()
-	# click the traders radio button
-	helpers.find_element_by_xpath_and_wait(browser, "//input[@id='radio-Traders']").click()
-	# click ok to download
-	helpers.find_element_by_xpath_and_wait(browser, "//div[@class='popup-contents']//a[@title='Ok']").click()
-	# wait for the download - TODO - MAKE SMARTER
-	tickers = helpers.process_result()
-	browser.quit()
+		# download csv
+		# click the download button to bring up the popup
+		helpers.find_element_by_xpath_and_wait(browser, "//a[text()='Download']").click()
+		# click the traders radio button
+		helpers.find_element_by_xpath_and_wait(browser, "//input[@id='radio-Traders']").click()
+		# click ok to download
+		helpers.find_element_by_xpath_and_wait(browser, "//div[@class='popup-contents']//a[@title='Ok']").click()
+		# wait for the download - TODO - MAKE SMARTER
+		tickers = helpers.process_result()
+		browser.quit()
 
-	fetch.successful = True
-	fetch.save()
-	tickers_key = hash(str(tickers))
-	cache.set(tickers_key, tickers)
-	save_fetch_results.delay(fetch.id, tickers_key)
+		fetch.successful = True
+		fetch.save()
+		tickers_key = hash(str(tickers))
+		cache.set(tickers_key, tickers)
+		save_fetch_results.delay(fetch.id, tickers_key)
 
-	return tickers
+		return tickers
+	except Exception, e:
+		raise run_screen.retry(exc=e)
 
 
 @task

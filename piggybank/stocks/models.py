@@ -18,9 +18,10 @@ class Stock(models.Model):
 	def __unicode__(self):
 		return self.ticker
 
+
 class StockSnapshot(models.Model):
 	"""
-	Stock statistics for a given day
+	Snapshot of a stock at a specified date.
 
 	"""
 	open_price = models.FloatField(blank=True)

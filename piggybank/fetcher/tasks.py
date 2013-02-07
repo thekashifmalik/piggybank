@@ -35,7 +35,17 @@ def run_screen(fetch_type_id):
 		browser.get("https://research2.fidelity.com/fidelity/screeners/commonstock/main.asp")
 		logger.info("Going to screen page")
 
-		helpers.populate_filters_reuters_ford(browser)
+		# TODO: make this less explicit
+		if str(fetch_type) == "Thomson and Ford Buy Buy":
+			helpers.populate_filters_reuters_ford_buy_buy(browser)
+		elif str(fetch_type) == "Thomson and Ford Sell Sell":
+			helpers.populate_filters_reuters_ford_sell_sell(browser)
+		elif str(fetch_type) == "Thomson and Ford Hold Hold":
+			helpers.populate_filters_reuters_ford_hold_hold(browser)
+		else:
+			return []
+			logger.error("No populate filter function found for fetch type " + str(fetch_type))
+
 
 		helpers.delete_old_results()
 
@@ -45,6 +55,7 @@ def run_screen(fetch_type_id):
 		# click the traders radio button
 		helpers.find_element_by_xpath_and_wait(browser, "//input[@id='radio-Traders']").click()
 		# click ok to download
+		logger.info("Clicking Download")
 		helpers.find_element_by_xpath_and_wait(browser, "//div[@class='popup-contents']//a[@title='Ok']").click()
 		# wait for the download - TODO - MAKE SMARTER
 		tickers = helpers.process_result()

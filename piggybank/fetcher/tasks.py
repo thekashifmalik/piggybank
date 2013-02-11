@@ -20,7 +20,7 @@ logger = get_task_logger(__name__)
 
 # Put task here in place of foo.
 @periodic_task(run_every=24*60*60)
-def run_screen(fetch_type_id):
+def run_screen(fetch_type_id=2):
 	try:
 		fetch_type = FetchType.objects.get(id=fetch_type_id)
 		logger.info("Starting screen for " + str(fetch_type))

@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-import helpers as g_helpers
+from helpers.mail import send_mail
 import time
 
 from . import helpers
@@ -116,7 +116,7 @@ def send_fetch_email(fetch_id):
 	fetch = Fetch.objects.get(id=fetch_id)
 	# Send unsuccessful fetch email
 	if not fetch.successful:
-		g_helpers.send_mail('Daily Fetch Update', 'Fetch was unsuccesful.', admin_emails)
+		send_mail('Daily Fetch Update', 'Fetch was unsuccesful.', admin_emails)
 		return
 	# Send succesful fetch email
-	g_helpers.send_mail('Daily Fetch Update', 'Fetch was succesful', admin_emails)
+	send_mail('Daily Fetch Update', 'Fetch was succesful', admin_emails)

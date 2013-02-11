@@ -131,3 +131,7 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 # Celery settings
 import djcelery
 djcelery.setup_loader()
+
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True

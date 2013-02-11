@@ -3,7 +3,6 @@ import os
 import csv
 from selenium.webdriver.support.wait import WebDriverWait
 from celery.utils.log import get_task_logger
-import pdb
 
 logger = get_task_logger(__name__)
 

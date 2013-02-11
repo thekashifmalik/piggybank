@@ -9,6 +9,7 @@ from django.core.cache import cache
 from celery.utils.log import get_task_logger
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from pyvirtualdisplay import Display; display = Display(visible=0, size=(1024, 768)); display.start()
 
 logger = get_task_logger(__name__)
 

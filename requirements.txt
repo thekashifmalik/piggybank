@@ -1,5 +1,7 @@
 Django==1.4.3
+EasyProcess==0.1.4
 Fabric==1.5.2
+PyVirtualDisplay==0.1.1
 South==0.7.6
 Unipath==0.2.1
 amqp==1.0.6
@@ -16,6 +18,7 @@ kombu==2.5.4
 paramiko==1.9.0
 psycopg2==2.4.6
 pycrypto==2.6
+pygraphviz==1.1
 pylibmc==1.2.3
 python-dateutil==1.5
 pytz==2012j

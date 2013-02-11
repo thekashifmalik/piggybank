@@ -1,7 +1,11 @@
-import helpers
-import os
+from __future__ import absolute_import
+
+import helpers as g_helpers
 import time
+
+from . import helpers
 from celery import task
+from celery.task import periodic_task
 from .models import Fetch, FetchType, FetchResult
 from stocks.models import Stock
 from django.conf import settings
@@ -15,7 +19,7 @@ logger = get_task_logger(__name__)
 
 
 # Put task here in place of foo.
-@task(max_retries=5)
+@periodic_task(run_every=24*60*60)
 def run_screen(fetch_type_id):
 	try:
 		fetch_type = FetchType.objects.get(id=fetch_type_id)
@@ -67,6 +71,7 @@ def run_screen(fetch_type_id):
 		tickers_key = hash(str(tickers))
 		cache.set(tickers_key, tickers)
 		save_fetch_results.delay(fetch.id, tickers_key)
+		send_fetch_email.delay(fetch.id)
 
 		return tickers
 	except Exception, e:
@@ -100,3 +105,18 @@ def save_fetch_results(fetch_id, result_key):
 		fetch_result.stocks.add(stock)
 
 	fetch_result.save()
+
+@task
+def send_fetch_email(fetch_id):
+	# Delay email sending to save incoming data
+	time.sleep(10)
+	# Get admin emails from settings
+	admin_emails = [email[1] for email in settings.ADMINS]
+	# Get stocks retrieved
+	fetch = Fetch.objects.get(id=fetch_id)
+	# Send unsuccessful fetch email
+	if not fetch.successful:
+		g_helpers.send_mail('Daily Fetch Update', 'Fetch was unsuccesful.', admin_emails)
+		return
+	# Send succesful fetch email
+	g_helpers.send_mail('Daily Fetch Update', 'Fetch was succesful', admin_emails)

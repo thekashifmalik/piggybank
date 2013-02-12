@@ -114,9 +114,35 @@ def send_fetch_email(fetch_id):
 	admin_emails = [email[1] for email in settings.ADMINS]
 	# Get stocks retrieved
 	fetch = Fetch.objects.get(id=fetch_id)
+	fetch_type = fetch.type
+	fetches = fetch_type.fetch_set.all()
+	new_fetch = fetches[len(fetches) - 1]
+	logger.info("New Fetch has id " + str(new_fetch.id))
+	# if the previous fetch was unsuccessful, go back until there is a successful one
+	i = 2
+	while True:
+		old_fetch = fetches[len(fetches) - i]
+		i -= 1
+		if old_fetch.result.__class__.__name__ != 'NoneType':
+			if old_fetch.successful == True:
+				break
+			else:
+				logger.info("Fetch " + str(old_fetch.id) + " was unsuccessful")
+		else:
+			logger.info("Fetch " + str(old_fetch.id) + " did not save a result")
+	logger.info("Old Fetch has id " + str(old_fetch.id))
+
+	new_tickers = [str(stock) for stock in new_fetch.result.stocks.all()]
+	old_tickers = [str(stock) for stock in old_fetch.result.stocks.all()]
+
+	buy = [ticker for ticker in new_tickers if ticker not in old_tickers]
+	sell = [ticker for ticker in old_tickers if ticker not in new_tickers]
+
 	# Send unsuccessful fetch email
-	if not fetch.successful:
+	if not new_fetch.successful:
 		send_mail('Daily Fetch Update', 'Fetch was unsuccesful.', admin_emails)
 		return
 	# Send succesful fetch email
-	send_mail('Daily Fetch Update', 'Fetch was succesful', admin_emails)
+	email_content = 'Completed Fetch: ' + str(fetch.type) + '\nBuy: ' + str(buy) + '\nSell: ' + str(sell) + '\nPortfolio: ' + str(new_tickers)
+	logger.info("Email Contents: " + email_content)
+	send_mail('Daily Fetch Update', email_content, admin_emails)
